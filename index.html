@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#5546d8" />
+    <meta
+      name="description"
+      content="A course-grounded AI study companion for college students."
+    />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <title>Course Study Companion</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#study-main">Skip to study area</a>
+
+    <div class="app-shell" id="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Study companion home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 48 48" role="img">
+              <path d="M9 13.5c5.6-3 10.6-3 15 0v24c-4.4-3-9.4-3-15 0v-24Z" />
+              <path d="M39 13.5c-5.6-3-10.6-3-15 0v24c4.4-3 9.4-3 15 0v-24Z" />
+              <path class="spark" d="m34.5 5 1.3 3.2L39 9.5l-3.2 1.3-1.3 3.2-1.3-3.2L30 9.5l3.2-1.3L34.5 5Z" />
+            </svg>
+          </span>
+          <span>
+            <strong id="product-name">Study Companion</strong>
+            <small id="course-name-top">Loading secure course…</small>
+          </span>
+        </a>
+
+        <div class="topbar-actions">
+          <span class="scope-pill" id="scope-pill">
+            <span class="scope-dot" aria-hidden="true"></span>
+            Course-grounded
+          </span>
+          <button class="icon-button" id="theme-button" type="button" aria-label="Change color mode">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9c0-.5 0-1-.1-1.5A7 7 0 0 1 12 3Z" /></svg>
+          </button>
+          <button class="icon-button" id="settings-button" type="button" aria-label="Open settings">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.7a3.3 3.3 0 1 0 0 6.6 3.3 3.3 0 0 0 0-6.6Zm8.2 4.6v-2.6l-2.3-.8a7 7 0 0 0-.7-1.7l1.1-2.1-1.8-1.8-2.1 1.1a7 7 0 0 0-1.7-.7L11.9 2H9.3l-.8 2.3a7 7 0 0 0-1.7.7L4.7 3.9 2.9 5.7 4 7.8a7 7 0 0 0-.7 1.7L1 10.3v2.6l2.3.8a7 7 0 0 0 .7 1.7l-1.1 2.1 1.8 1.8 2.1-1.1a7 7 0 0 0 1.7.7l.8 2.3h2.6l.8-2.3a7 7 0 0 0 1.7-.7l2.1 1.1 1.8-1.8-1.1-2.1a7 7 0 0 0 .7-1.7l2.3-.8Z" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <aside class="sidebar" id="sidebar" aria-label="Study scope">
+          <div class="sidebar-heading">
+            <div>
+              <p class="eyebrow">Study scope</p>
+              <h2>What are we covering?</h2>
+            </div>
+            <button class="sidebar-close" id="sidebar-close" type="button" aria-label="Close study scope">×</button>
+          </div>
+
+          <label class="field-label" for="scope-select">Choose material</label>
+          <select id="scope-select" class="select-control">
+            <option value="">Loading…</option>
+          </select>
+
+          <div class="scope-summary" id="scope-summary" aria-live="polite"></div>
+
+          <button class="secondary-button full-width" id="custom-scope-button" type="button">
+            Choose multiple chapters
+          </button>
+
+          <div class="sidebar-divider"></div>
+
+          <p class="eyebrow">Session</p>
+          <button class="sidebar-action" id="new-topic-button" type="button">
+            <span class="sidebar-action-icon" aria-hidden="true">＋</span>
+            <span><strong>New topic</strong><small>Clear this conversation</small></span>
+          </button>
+          <button class="sidebar-action" id="notes-button" type="button">
+            <span class="sidebar-action-icon" aria-hidden="true">✦</span>
+            <span><strong>Study notes</strong><small>Summarize what you learned</small></span>
+          </button>
+
+          <div class="grounding-card">
+            <span class="grounding-icon" aria-hidden="true">◎</span>
+            <div>
+              <strong>Answers stay anchored</strong>
+              <p>Claims must point back to material selected above.</p>
+            </div>
+          </div>
+        </aside>
+
+        <main class="study-main" id="study-main">
+          <div class="mobile-scope-row">
+            <button class="mobile-scope-button" id="mobile-scope-button" type="button">
+              <span>Studying</span>
+              <strong id="mobile-scope-label">Choose material</strong>
+              <span aria-hidden="true">⌄</span>
+            </button>
+          </div>
+
+          <nav class="mode-tabs" aria-label="Study mode">
+            <button class="mode-tab active" type="button" data-mode="ask" aria-current="page">
+              <span aria-hidden="true">✦</span> Ask
+            </button>
+            <button class="mode-tab" type="button" data-mode="quiz">
+              <span aria-hidden="true">✓</span> Quiz me
+            </button>
+            <button class="mode-tab" type="button" data-mode="explain">
+              <span aria-hidden="true">↗</span> Explain it back
+            </button>
+          </nav>
+
+          <section class="conversation" id="conversation" aria-live="polite" aria-label="Conversation">
+            <article class="welcome-panel" id="welcome-panel">
+              <div class="welcome-orbit" aria-hidden="true">
+                <span class="orbit-ring ring-one"></span>
+                <span class="orbit-ring ring-two"></span>
+                <span class="orbit-core">✦</span>
+              </div>
+              <p class="eyebrow">Built from your professor’s material</p>
+              <h1 id="welcome-heading">Study what matters.<br /><span>Understand it deeply.</span></h1>
+              <p class="welcome-copy" id="welcome-copy">
+                Ask questions, practice for an exam, or teach a concept back. Every answer is checked against the course material you select.
+              </p>
+
+              <div class="starter-grid" id="starter-grid">
+                <button class="starter-card" type="button" data-prompt="Give me a clear map of the major ideas in this material.">
+                  <span class="starter-icon violet" aria-hidden="true">⌁</span>
+                  <span><strong>Map the big ideas</strong><small>See how the concepts fit together</small></span>
+                  <span class="starter-arrow" aria-hidden="true">→</span>
+                </button>
+                <button class="starter-card" type="button" data-prompt="Help me find the concepts I am most likely to confuse.">
+                  <span class="starter-icon teal" aria-hidden="true">◇</span>
+                  <span><strong>Find the tricky parts</strong><small>Untangle similar terms and theories</small></span>
+                  <span class="starter-arrow" aria-hidden="true">→</span>
+                </button>
+                <button class="starter-card" type="button" data-switch-mode="quiz">
+                  <span class="starter-icon coral" aria-hidden="true">✓</span>
+                  <span><strong>Practice for an exam</strong><small>Build a balanced, course-only quiz</small></span>
+                  <span class="starter-arrow" aria-hidden="true">→</span>
+                </button>
+              </div>
+            </article>
+          </section>
+
+          <section class="composer-wrap" aria-label="Ask a study question">
+            <div class="composer">
+              <textarea
+                id="message-input"
+                rows="1"
+                placeholder="Ask about the selected course material…"
+                aria-label="Study question"
+              ></textarea>
+              <div class="composer-actions">
+                <button class="composer-tool" id="read-selection-button" type="button" aria-label="Read the latest answer aloud" title="Read the latest answer aloud">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm12.5-.8a5.5 5.5 0 0 1 0 7.6m2.4-10a9 9 0 0 1 0 12.4" /></svg>
+                </button>
+                <span class="composer-hint" id="composer-hint">Enter to send · Shift+Enter for a new line</span>
+                <button class="send-button" id="send-button" type="button" aria-label="Send question">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 14-7-4.5 14-3-5.5L5 12Zm6.5 1.5L19 5" /></svg>
+                </button>
+              </div>
+            </div>
+            <p class="privacy-line">Course-grounded AI can still make mistakes. Verify important details against your class materials.</p>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <dialog class="modal course-access-modal" id="course-access-modal">
+      <form method="dialog" class="modal-card course-access-card" id="course-access-form">
+        <div class="onboarding-visual compact-visual" aria-hidden="true">
+          <div class="visual-glow"></div>
+          <span class="access-lock">⌁</span>
+          <span class="visual-chip chip-one">Professor-provided</span>
+          <span class="visual-chip chip-two">Encrypted course</span>
+          <span class="visual-chip chip-three">Unlocks here</span>
+        </div>
+        <div class="onboarding-content">
+          <span class="step-indicator">Course access</span>
+          <h2 id="access-course-title">Unlock your course</h2>
+          <p>
+            Enter the class code provided by your professor. The course material is decrypted only in this browser—it is not publicly readable on the website.
+          </p>
+
+          <label class="field-label" for="course-code-input">Course access code</label>
+          <div class="key-field">
+            <input id="course-code-input" type="password" autocomplete="off" autocapitalize="characters" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" />
+            <button id="reveal-course-code-button" type="button">Show</button>
+          </div>
+          <p class="field-help" id="course-unlock-status">Hyphens and capitalization do not matter.</p>
+
+          <div class="onboarding-actions">
+            <button class="primary-button" id="unlock-course-button" type="button">
+              Unlock course <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal onboarding-modal" id="onboarding-modal">
+      <form method="dialog" class="modal-card onboarding-card" id="onboarding-form">
+        <div class="onboarding-visual" aria-hidden="true">
+          <div class="visual-glow"></div>
+          <span class="visual-book">✦</span>
+          <span class="visual-chip chip-one">Course-only answers</span>
+          <span class="visual-chip chip-two">Your pace</span>
+          <span class="visual-chip chip-three">Source-backed</span>
+        </div>
+        <div class="onboarding-content">
+          <span class="step-indicator">Welcome</span>
+          <h2 id="onboarding-title">A smarter way to study this course</h2>
+          <p id="onboarding-description">
+            This optional companion uses your professor’s material to explain, quiz, and coach—without wandering away from what your course actually covers.
+          </p>
+
+          <div class="funding-notice" role="note">
+            <span aria-hidden="true">i</span>
+            <div>
+              <strong>Important cost and funding notice</strong>
+              <p id="funding-notice-text">
+                This is an optional study aid. The study tool itself is free, but use of third-party AI services such as OpenRouter may involve personal charges. College educational resource funds may not be used to purchase OpenRouter credits or cover any related costs.
+              </p>
+            </div>
+          </div>
+
+          <label class="acknowledge-row">
+            <input type="checkbox" id="funding-acknowledgement" />
+            <span>I understand that this is an optional tool and any AI service charges are my responsibility.</span>
+          </label>
+
+          <div class="onboarding-actions">
+            <button class="primary-button" id="begin-setup-button" type="button" disabled>
+              Continue to setup <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="setup-modal">
+      <form method="dialog" class="modal-card settings-card" id="setup-form">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Private setup</p>
+            <h2>Connect your study companion</h2>
+          </div>
+          <button class="modal-close" value="cancel" aria-label="Close setup">×</button>
+        </div>
+
+        <div class="form-section">
+          <label class="field-label">What kind of device is this?</label>
+          <div class="choice-grid">
+            <label class="choice-card">
+              <input type="radio" name="device-mode" value="personal" checked />
+              <span class="choice-icon" aria-hidden="true">⌂</span>
+              <span><strong>My personal device</strong><small>Remember my key on this browser</small></span>
+            </label>
+            <label class="choice-card">
+              <input type="radio" name="device-mode" value="shared" />
+              <span class="choice-icon" aria-hidden="true">⌘</span>
+              <span><strong>Shared or library computer</strong><small>Clear everything when this tab closes</small></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="field-label" for="api-key-input">OpenRouter API key</label>
+          <div class="key-field">
+            <input id="api-key-input" type="password" autocomplete="off" placeholder="sk-or-v1-…" />
+            <button id="reveal-key-button" type="button">Show</button>
+          </div>
+          <p class="field-help">Stored only in this browser. Requests go directly from your device to OpenRouter.</p>
+        </div>
+
+        <div class="form-section">
+          <label class="field-label" for="model-select">Approved model</label>
+          <select id="model-select" class="select-control"></select>
+          <p class="field-help" id="model-description">Only instructor-approved, low-cost models appear here.</p>
+        </div>
+
+        <div class="modal-actions split-actions">
+          <a class="text-link" href="https://openrouter.ai/keys" target="_blank" rel="noreferrer">Where do I get a key?</a>
+          <button class="primary-button" id="save-setup-button" type="button">Save and start studying</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="settings-modal">
+      <form method="dialog" class="modal-card settings-card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Preferences</p>
+            <h2>Settings</h2>
+          </div>
+          <button class="modal-close" value="cancel" aria-label="Close settings">×</button>
+        </div>
+
+        <div class="settings-list">
+          <label class="settings-row">
+            <span><strong>Text size</strong><small>Make the study area easier to read</small></span>
+            <select id="text-size-select" class="compact-select">
+              <option value="normal">Default</option>
+              <option value="large">Large</option>
+              <option value="xlarge">Extra large</option>
+            </select>
+          </label>
+          <label class="settings-row">
+            <span><strong>Reading font</strong><small>Choose the shape that works for your eyes</small></span>
+            <select id="font-select" class="compact-select">
+              <option value="sans">Modern sans</option>
+              <option value="accessible">Accessible</option>
+              <option value="serif">Serif</option>
+            </select>
+          </label>
+          <label class="settings-row switch-row">
+            <span><strong>High contrast</strong><small>Increase separation between surfaces</small></span>
+            <input id="contrast-toggle" type="checkbox" role="switch" />
+          </label>
+        </div>
+
+        <div class="danger-zone">
+          <button class="secondary-button" id="reopen-setup-button" type="button">Change API setup</button>
+          <button class="secondary-button" id="forget-course-button" type="button">Forget course access</button>
+          <button class="danger-button" id="clear-data-button" type="button">Clear my data</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="scope-modal">
+      <form method="dialog" class="modal-card settings-card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Custom study scope</p>
+            <h2>Choose chapters</h2>
+          </div>
+          <button class="modal-close" value="cancel" aria-label="Close chapter selection">×</button>
+        </div>
+        <div class="check-list" id="custom-scope-list"></div>
+        <div class="modal-actions">
+          <button class="primary-button" id="apply-custom-scope-button" type="button">Study selected chapters</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script type="module" src="assets/app.js"></script>
+  </body>
+</html>

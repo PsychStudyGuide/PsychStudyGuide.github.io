@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#5546d8" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <link rel="stylesheet" href="assets/faculty.css" />
+    <title>Faculty Course Builder</title>
+  </head>
+  <body class="faculty-body">
+    <header class="faculty-topbar">
+      <a class="brand" href="index.html">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48"><path d="M9 13.5c5.6-3 10.6-3 15 0v24c-4.4-3-9.4-3-15 0v-24Z"/><path d="M39 13.5c-5.6-3-10.6-3-15 0v24c4.4-3 9.4-3 15 0v-24Z"/><path class="spark" d="m34.5 5 1.3 3.2L39 9.5l-3.2 1.3-1.3 3.2-1.3-3.2L30 9.5l3.2-1.3L34.5 5Z"/></svg>
+        </span>
+        <span><strong>Faculty Course Builder</strong><small>No application code required</small></span>
+      </a>
+      <a class="secondary-button faculty-preview-link" href="index.html">Preview student view</a>
+    </header>
+
+    <main class="faculty-main">
+      <section class="faculty-hero">
+        <div>
+          <p class="eyebrow">Portable course data</p>
+          <h1>Change the course.<br /><span>Keep the study tool.</span></h1>
+          <p>Edit course information, organize chapters, add lecture transcripts, and create exam study sets. Everything exports as one replacement file.</p>
+        </div>
+        <div class="local-only-card">
+          <span aria-hidden="true">⌂</span>
+          <div><strong>Your raw material stays local</strong><small>This editor encrypts course content in your browser and never uploads files or access codes.</small></div>
+        </div>
+      </section>
+
+      <div class="builder-toolbar">
+        <label class="secondary-button file-button">
+          Import private editing file
+          <input id="import-pack-input" type="file" accept="application/json,.json,.coursepack.json" />
+        </label>
+        <button class="primary-button" id="export-pack-button" type="button">Back up editable course</button>
+      </div>
+
+      <section class="builder-section">
+        <div class="builder-section-heading">
+          <div><p class="eyebrow">Course identity</p><h2>What students will see</h2></div>
+          <span class="status-chip" id="save-status">New local course</span>
+        </div>
+        <div class="builder-grid two-columns">
+          <label class="builder-field"><span>Product name</span><input id="builder-product-name" type="text" /></label>
+          <label class="builder-field"><span>Course title</span><input id="builder-course-title" type="text" /></label>
+          <label class="builder-field"><span>Instructor display name</span><input id="builder-instructor" type="text" /></label>
+          <label class="builder-field"><span>Companion name</span><input id="builder-companion-name" type="text" /></label>
+          <label class="builder-field"><span>Welcome heading</span><input id="builder-welcome-heading" type="text" /></label>
+          <label class="builder-field"><span>Highlighted heading line</span><input id="builder-welcome-accent" type="text" /></label>
+          <label class="builder-field span-two"><span>Welcome description</span><textarea id="builder-welcome-text" rows="3"></textarea></label>
+          <label class="builder-field"><span>Primary color</span><input id="builder-primary-color" type="color" /></label>
+          <label class="builder-field"><span>Secondary color</span><input id="builder-secondary-color" type="color" /></label>
+        </div>
+      </section>
+
+      <section class="builder-section">
+        <div class="builder-section-heading">
+          <div><p class="eyebrow">Institutional language</p><h2>Funding notice</h2></div>
+          <span class="required-chip">Displayed before setup</span>
+        </div>
+        <label class="builder-field"><span>Required notice</span><textarea id="builder-funding-notice" rows="5"></textarea></label>
+      </section>
+
+      <section class="builder-section">
+        <div class="builder-section-heading">
+          <div><p class="eyebrow">Course structure</p><h2>Chapters and units</h2></div>
+          <button class="secondary-button" id="add-unit-button" type="button">＋ Add chapter</button>
+        </div>
+        <div class="editable-list" id="unit-list"></div>
+      </section>
+
+      <section class="builder-section">
+        <div class="builder-section-heading">
+          <div><p class="eyebrow">Professor-owned sources</p><h2>Lecture transcripts</h2></div>
+          <label class="secondary-button file-button">
+            ＋ Add transcript files
+            <input id="add-documents-input" type="file" accept=".txt,.md,text/plain,text/markdown" multiple />
+          </label>
+        </div>
+        <p class="builder-help">New files are added to the chapter chosen below. Raw text is preserved in the exported pack; ambiguous caption corrections should be reviewed separately.</p>
+        <label class="builder-field narrow-field"><span>Add new transcripts to</span><select id="document-unit-select"></select></label>
+        <div class="editable-list" id="document-list"></div>
+      </section>
+
+      <section class="builder-section">
+        <div class="builder-section-heading">
+          <div><p class="eyebrow">Multi-chapter studying</p><h2>Exam study sets</h2></div>
+          <button class="secondary-button" id="add-study-set-button" type="button">＋ Add study set</button>
+        </div>
+        <p class="builder-help">A study set references chapters without duplicating their files. Students can still create their own custom combination.</p>
+        <div class="editable-list" id="study-set-list"></div>
+      </section>
+
+      <section class="builder-section">
+        <div class="builder-section-heading">
+          <div><p class="eyebrow">Companion behavior</p><h2>Voice and boundaries</h2></div>
+        </div>
+        <div class="builder-grid two-columns">
+          <label class="builder-field"><span>Written voice</span><textarea id="builder-persona" rows="8"></textarea></label>
+          <label class="builder-field"><span>Course and integrity rules</span><textarea id="builder-guardrails" rows="8"></textarea></label>
+        </div>
+      </section>
+
+      <section class="builder-section encryption-section">
+        <div class="builder-section-heading">
+          <div><p class="eyebrow">Protected publishing</p><h2>Encrypt the student course bundle</h2></div>
+          <span class="required-chip">Required before publishing</span>
+        </div>
+        <p class="builder-help">The access code is never placed in the downloaded bundle. Give it directly to your students. Keep your private editing backup somewhere safe—it contains the readable course material.</p>
+        <div class="builder-grid code-builder-grid">
+          <label class="builder-field">
+            <span>Course access code</span>
+            <div class="key-field">
+              <input id="builder-course-code" type="password" autocomplete="off" placeholder="Generate a secure code" />
+              <button id="reveal-builder-code-button" type="button">Show</button>
+            </div>
+          </label>
+          <button class="secondary-button generate-code-button" id="generate-course-code-button" type="button">Generate secure code</button>
+        </div>
+        <div class="code-result" id="course-code-result" hidden>
+          <span>Give students this code</span>
+          <strong id="generated-course-code"></strong>
+          <button class="tiny-button" id="copy-course-code-button" type="button">Copy code</button>
+        </div>
+        <button class="primary-button bundle-download-button" id="export-bundle-button" type="button">Download encrypted website bundle</button>
+      </section>
+
+      <section class="export-reminder">
+        <div><strong>Ready to publish an update?</strong><p>Upload only <code>course/course.bundle.json</code> to GitHub. Never upload your private <code>.coursepack.json</code> editing backup.</p></div>
+        <button class="primary-button" id="export-bundle-button-bottom" type="button">Download encrypted bundle</button>
+      </section>
+    </main>
+
+    <dialog class="modal" id="unit-dialog">
+      <form method="dialog" class="modal-card settings-card" id="unit-form">
+        <div class="modal-header"><div><p class="eyebrow">Course structure</p><h2>Add a chapter or unit</h2></div><button class="modal-close" value="cancel" aria-label="Close">×</button></div>
+        <label class="builder-field"><span>Title</span><input id="new-unit-title" type="text" placeholder="Chapter 2 · Research Methods" /></label>
+        <label class="builder-field"><span>Description</span><textarea id="new-unit-description" rows="3" placeholder="What this chapter covers"></textarea></label>
+        <div class="modal-actions"><button class="primary-button" id="save-unit-button" type="button">Add chapter</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="study-set-dialog">
+      <form method="dialog" class="modal-card settings-card">
+        <div class="modal-header"><div><p class="eyebrow">Exam scope</p><h2>Create a study set</h2></div><button class="modal-close" value="cancel" aria-label="Close">×</button></div>
+        <label class="builder-field"><span>Name</span><input id="new-set-title" type="text" placeholder="Exam 2 Study Set" /></label>
+        <label class="builder-field"><span>Description</span><textarea id="new-set-description" rows="3" placeholder="Chapters and themes included on this exam"></textarea></label>
+        <fieldset class="builder-fieldset"><legend>Included chapters</legend><div class="check-list" id="new-set-unit-list"></div></fieldset>
+        <div class="modal-actions"><button class="primary-button" id="save-study-set-button" type="button">Create study set</button></div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="faculty-toast" role="status" aria-live="polite"></div>
+    <script type="module" src="assets/faculty.js"></script>
+  </body>
+</html>

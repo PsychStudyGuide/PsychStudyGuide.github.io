@@ -1,0 +1,17 @@
+{
+  "name": "Course Study Companion",
+  "short_name": "Study Companion",
+  "description": "A course-grounded AI study companion for college students.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7f6fc",
+  "theme_color": "#5546d8",
+  "icons": [
+    {
+      "src": "icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
