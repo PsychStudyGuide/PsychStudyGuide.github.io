@@ -6,6 +6,7 @@ const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
 const SHARED_IDLE_MS = 20 * 60 * 1000;
 const MAX_HISTORY_TURNS = 8;
 const MAX_CONTEXT_CHUNKS = 7;
+const LOW_REASONING_MODELS = new Set(["openai/gpt-oss-20b"]);
 const COURSE_DB_NAME = "course-study-companion";
 const COURSE_DB_STORE = "course-cache";
 const COURSE_DB_KEY = "active-course";
@@ -729,6 +730,13 @@ async function callOpenRouter({ apiKey, modelId, message, evidence, scope }) {
     },
   };
 
+  if (LOW_REASONING_MODELS.has(modelId)) {
+    requestBody.reasoning = {
+      effort: "low",
+      exclude: true,
+    };
+  }
+
   const response = await fetch(OPENROUTER_CHAT_URL, {
     method: "POST",
     headers: {
@@ -749,8 +757,18 @@ async function callOpenRouter({ apiKey, modelId, message, evidence, scope }) {
     error.modelId = modelId;
     throw error;
   }
-  const content = payload.choices?.[0]?.message?.content;
-  if (!content) throw new Error("The model returned an empty response.");
+  const choice = payload.choices?.[0];
+  const content = choice?.message?.content;
+  if (!content) {
+    const error = new Error(
+      choice?.finish_reason === "length"
+        ? "The model used its response budget before producing a visible answer. Please try again."
+        : "The model returned an empty response. Please try again.",
+    );
+    error.name = "EmptyModelResponseError";
+    error.finishReason = choice?.finish_reason;
+    throw error;
+  }
   return parseJsonResponse(content);
 }
 
