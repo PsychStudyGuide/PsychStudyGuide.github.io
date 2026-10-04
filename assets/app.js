@@ -708,7 +708,8 @@ async function callOpenRouter({ apiKey, modelId, message, evidence, scope }) {
     explain: "Act as an explain-it-back coach. Invite or assess the student's own explanation. Identify what is accurate, what is missing, and one concrete way to improve it. Do not replace their effort with a polished assignment answer.",
   };
 
-  const system = `${state.pack.guardrails}\n\n${state.pack.persona}\n\nCURRENT MODE\n${modeRules[state.mode]}\n\nCURRENT STUDY SCOPE\n${scope.title}\n\nCOURSE SOURCES\n${sourceText}\n\nRESPONSE CONTRACT\nReturn one JSON object with these exact fields:\n- scope: "in_course", "partial", or "not_found"\n- answer: the student-facing response\n- source_ids: an array containing only SOURCE IDs printed above\nRules: Every factual course claim must be supported by those sources. If sources do not support the answer, set scope to "not_found", explain that the selected course material does not cover it, and offer the closest relevant course connection. Do not answer from general world knowledge. Never invent a source ID.`;
+  const allowedSourceIds = evidence.length ? evidence.map((chunk) => chunk.id).join("\n") : "(none)";
+  const system = `${state.pack.guardrails}\n\n${state.pack.persona}\n\nCURRENT MODE\n${modeRules[state.mode]}\n\nCURRENT STUDY SCOPE\n${scope.title}\n\nCOURSE SOURCES\n${sourceText}\n\nALLOWED SOURCE IDS\n${allowedSourceIds}\n\nRESPONSE CONTRACT\nReturn one JSON object with these exact fields:\n- scope: "in_course", "partial", or "not_found"\n- answer: the student-facing response\n- source_ids: an array containing only IDs copied exactly from ALLOWED SOURCE IDS\nRules: Every factual course claim must be supported by those sources. Copy each source ID exactly, without adding the word SOURCE, brackets, titles, or other text. If sources do not support the answer, set scope to "not_found", explain that the selected course material does not cover it, and use an empty source_ids array. Do not answer from general world knowledge. Never invent a source ID.`;
 
   const recentHistory = state.history.slice(0, -1).slice(-MAX_HISTORY_TURNS * 2);
   const requestBody = {
@@ -767,7 +768,9 @@ function parseJsonResponse(content) {
 function validateAssistantResponse(response, evidence) {
   const allowedScopes = new Set(["in_course", "partial", "not_found"]);
   const allowedIds = new Set(evidence.map((chunk) => chunk.id));
-  const sourceIds = Array.isArray(response.source_ids) ? response.source_ids.filter((id) => allowedIds.has(id)) : [];
+  let sourceIds = Array.isArray(response.source_ids)
+    ? [...new Set(response.source_ids.map((value) => normalizeSourceId(value, allowedIds)).filter(Boolean))]
+    : [];
   let scope = allowedScopes.has(response.scope) ? response.scope : "not_found";
   let answer = typeof response.answer === "string" ? response.answer.trim() : "";
 
@@ -776,10 +779,48 @@ function validateAssistantResponse(response, evidence) {
     answer = "I could not produce a supported answer from the selected course material.";
   }
   if ((scope === "in_course" || scope === "partial") && !sourceIds.length) {
-    scope = "not_found";
-    answer = "I found a possible answer, but it did not include valid support from the selected course material, so I am not presenting it as course content.";
+    sourceIds = inferSupportingSourceIds(answer, evidence);
+    if (!sourceIds.length) {
+      scope = "not_found";
+      answer = "I found a possible answer, but it did not include valid support from the selected course material, so I am not presenting it as course content.";
+    }
   }
   return { scope, answer, sourceIds };
+}
+
+function normalizeSourceId(value, allowedIds) {
+  const raw = typeof value === "string" ? value : value?.id || value?.source_id || "";
+  const candidate = String(raw)
+    .trim()
+    .replace(/^\[?\s*SOURCE\s*:?[\s-]*/i, "")
+    .replace(/\]?\s*$/, "")
+    .split(/\s*\|\s*/)[0]
+    .trim();
+  if (allowedIds.has(candidate)) return candidate;
+  return [...allowedIds].find((id) => candidate.includes(id)) || "";
+}
+
+function inferSupportingSourceIds(answer, evidence) {
+  const answerTerms = new Set(tokenize(answer));
+  if (!answerTerms.size) return [];
+
+  const ranked = evidence
+    .map((chunk) => {
+      let overlap = 0;
+      answerTerms.forEach((term) => {
+        if (chunk.termSet.has(term)) overlap += 1;
+      });
+      return { id: chunk.id, overlap, coverage: overlap / answerTerms.size };
+    })
+    .filter((item) => item.overlap >= 4 && item.coverage >= 0.08)
+    .sort((left, right) => right.overlap - left.overlap || right.coverage - left.coverage);
+
+  if (!ranked.length) return [];
+  const relativeThreshold = Math.max(4, Math.ceil(ranked[0].overlap * 0.6));
+  return ranked
+    .filter((item) => item.overlap >= relativeThreshold)
+    .slice(0, 2)
+    .map((item) => item.id);
 }
 
 function retrieveEvidence(query, allowedDocumentIds) {
