@@ -27,6 +27,7 @@ const state = {
   activeRequest: false,
   latestAnswer: "",
   modelCatalog: new Map(),
+  unavailableModelIds: new Set(),
   idleTimer: null,
 };
 
@@ -130,6 +131,7 @@ function bindEvents() {
   });
 
   el.saveSetupButton.addEventListener("click", saveSetup);
+  el.modelSelect.addEventListener("change", updateModelDescription);
   el.settingsButton.addEventListener("click", () => el.settingsModal.showModal());
   el.reopenSetupButton.addEventListener("click", () => {
     el.settingsModal.close();
@@ -465,11 +467,11 @@ async function populateApprovedModels() {
   }
 
   el.modelSelect.disabled = false;
-  el.modelSelect.addEventListener("change", updateModelDescription);
   updateModelDescription();
 }
 
 function isModelWithinCeiling(configuredModel) {
+  if (state.unavailableModelIds.has(configuredModel.id)) return false;
   const catalogModel = state.modelCatalog.get(configuredModel.id);
   if (!catalogModel) return configuredModel.allowWhenCatalogUnavailable === true && state.modelCatalog.size === 0;
   const promptPerMillion = Number(catalogModel.pricing?.prompt) * 1_000_000;
@@ -663,7 +665,7 @@ async function sendCurrentMessage() {
   autoSizeInput();
   el.welcomePanel.hidden = true;
   el.conversation.querySelectorAll(".mode-intro").forEach((node) => node.remove());
-  addMessage("user", message);
+  const userMessageRow = addMessage("user", message);
   state.history.push({ role: "user", content: message });
   const typing = addTypingMessage();
   setRequestState(true);
@@ -681,11 +683,15 @@ async function sendCurrentMessage() {
   } catch (error) {
     console.error(error);
     typing.remove();
-    addMessage(
-      "assistant",
-      `I couldn’t complete that request. ${friendlyRequestError(error)}`,
-      { scope: "not_found", label: "Request interrupted" },
-    );
+    if (isUnavailableModelError(error)) {
+      await recoverFromUnavailableModel({ modelId, message, userMessageRow });
+    } else {
+      addMessage(
+        "assistant",
+        `I couldn’t complete that request. ${friendlyRequestError(error)}`,
+        { scope: "not_found", label: "Request interrupted" },
+      );
+    }
   } finally {
     setRequestState(false);
   }
@@ -735,7 +741,12 @@ async function callOpenRouter({ apiKey, modelId, message, evidence, scope }) {
 
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload.error?.message || `OpenRouter returned ${response.status}`);
+    const error = new Error(payload.error?.message || `OpenRouter returned ${response.status}`);
+    error.name = "OpenRouterRequestError";
+    error.status = response.status;
+    error.code = payload.error?.code;
+    error.modelId = modelId;
+    throw error;
   }
   const content = payload.choices?.[0]?.message?.content;
   if (!content) throw new Error("The model returned an empty response.");
@@ -1055,6 +1066,43 @@ function friendlyRequestError(error) {
   if (/provider|zdr|data/i.test(message)) return "No privacy-compatible provider is currently available for this approved model. Try another approved model.";
   if (/fetch|network/i.test(message)) return "Check your connection and try again.";
   return message;
+}
+
+function isUnavailableModelError(error) {
+  const message = String(error?.message || error);
+  return (
+    Number(error?.status) === 404 ||
+    Number(error?.code) === 404 ||
+    /unknown model|invalid model|model[^.]*\b(not found|no longer available|deprecated|retired|removed|unavailable)\b|no endpoints found/i.test(
+      message,
+    )
+  );
+}
+
+async function recoverFromUnavailableModel({ modelId, message, userMessageRow }) {
+  const configuredModel = state.pack.models.find((model) => model.id === modelId);
+  const modelName = configuredModel?.displayName || "The selected model";
+
+  state.unavailableModelIds.add(modelId);
+  localStorage.removeItem("study-model-id");
+  await populateApprovedModels();
+
+  const lastHistoryItem = state.history.at(-1);
+  if (lastHistoryItem?.role === "user" && lastHistoryItem.content === message) {
+    state.history.pop();
+  }
+  userMessageRow.remove();
+  el.messageInput.value = message;
+  autoSizeInput();
+
+  const hasReplacement = [...el.modelSelect.options].some((option) => option.value);
+  const explanation = hasReplacement
+    ? `${modelName} is no longer available through OpenRouter. Your course, API key, and question are safe. Choose one of the remaining approved low-cost models, save the selection, and then send your waiting question.`
+    : `${modelName} is no longer available through OpenRouter, and no other approved model is currently available. Your course, API key, and question are safe. Please let your instructor know that the approved model list needs an update.`;
+
+  addMessage("assistant", explanation);
+  hydrateSetupForm();
+  if (!el.setupModal.open) el.setupModal.showModal();
 }
 
 function showFatalCourseError() {
