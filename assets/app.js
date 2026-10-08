@@ -455,8 +455,9 @@ async function populateApprovedModels() {
   approved.forEach((model) => {
     const option = document.createElement("option");
     option.value = model.id;
-    const costLabel = model.costLabel ? ` (${model.costLabel})` : "";
-    option.textContent = `${model.label} · ${model.displayName}${costLabel}`;
+    option.textContent = model.costLabel
+      ? `${model.label} — ${model.displayName} — ${model.costLabel}`
+      : `${model.label} — ${model.displayName}`;
     option.dataset.description = model.description;
     el.modelSelect.append(option);
   });

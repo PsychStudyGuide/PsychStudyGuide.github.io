@@ -102,10 +102,10 @@ test("student flow unlocks, configures privacy, and renders grounded answers", {
     assert.deepEqual(
       [...modelSelect.options].map((option) => option.textContent),
       [
-        "Fast and focused · Gemini 2.5 Flash Lite (medium cost)",
-        "Careful reasoning · GPT OSS 20B (lowest paid cost)",
-        "Balanced · Qwen 3.5 Flash (low cost)",
-        "Free when available · Gemma 4 26B",
+        "Everyday studying — Gemini 2.5 Flash Lite — medium cost",
+        "Explanations and comparisons — GPT OSS 20B — lowest paid cost",
+        "Quizzes and course review — Qwen 3.5 Flash — low cost",
+        "Free when available — Gemma 4 26B",
       ],
     );
     window.document.getElementById("api-key-input").value = "sk-or-v1-integration-test";
@@ -214,9 +214,9 @@ async function loadCourseFixture() {
     },
     modelPolicy: { maxPromptPerMillion: 0.15, maxCompletionPerMillion: 0.6, maxOutputTokens: 850 },
     models: [
-      { id: "google/gemini-2.5-flash-lite", label: "Fast and focused", displayName: "Gemini 2.5 Flash Lite", costLabel: "medium cost", description: "Fast" },
-      { id: "openai/gpt-oss-20b", label: "Careful reasoning", displayName: "GPT OSS 20B", costLabel: "lowest paid cost", description: "Careful" },
-      { id: "qwen/qwen3.5-flash-02-23", label: "Balanced", displayName: "Qwen 3.5 Flash", costLabel: "low cost", description: "Balanced" },
+      { id: "google/gemini-2.5-flash-lite", label: "Everyday studying", displayName: "Gemini 2.5 Flash Lite", costLabel: "medium cost", description: "Fast" },
+      { id: "openai/gpt-oss-20b", label: "Explanations and comparisons", displayName: "GPT OSS 20B", costLabel: "lowest paid cost", description: "Careful" },
+      { id: "qwen/qwen3.5-flash-02-23", label: "Quizzes and course review", displayName: "Qwen 3.5 Flash", costLabel: "low cost", description: "Balanced" },
       { id: "google/gemma-4-26b-a4b-it:free", label: "Free when available", displayName: "Gemma 4 26B", description: "Free", responseFormat: "json_object" },
     ],
     units: [

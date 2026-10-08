@@ -74,9 +74,9 @@ function blankCoursePack() {
       pricingSource: "OpenRouter live model catalog",
     },
     models: [
-      { id: "google/gemini-2.5-flash-lite", label: "Fast and focused", displayName: "Gemini 2.5 Flash Lite", costLabel: "medium cost", description: "A quick choice for everyday studying; currently the highest-cost option in this approved lineup." },
-      { id: "openai/gpt-oss-20b", label: "Careful reasoning", displayName: "GPT OSS 20B", costLabel: "lowest paid cost", description: "The lowest-cost paid option in this approved lineup, suited to explanations and comparisons." },
-      { id: "qwen/qwen3.5-flash-02-23", label: "Balanced", displayName: "Qwen 3.5 Flash", costLabel: "low cost", description: "A low-cost, balanced option for quizzes and course review." },
+      { id: "google/gemini-2.5-flash-lite", label: "Everyday studying", displayName: "Gemini 2.5 Flash Lite", costLabel: "medium cost", description: "A quick choice for everyday studying; currently the highest-cost option in this approved lineup." },
+      { id: "openai/gpt-oss-20b", label: "Explanations and comparisons", displayName: "GPT OSS 20B", costLabel: "lowest paid cost", description: "The lowest-cost paid option in this approved lineup, suited to explanations and comparisons." },
+      { id: "qwen/qwen3.5-flash-02-23", label: "Quizzes and course review", displayName: "Qwen 3.5 Flash", costLabel: "low cost", description: "A low-cost, balanced option for quizzes and course review." },
       { id: "google/gemma-4-26b-a4b-it:free", label: "Free when available", displayName: "Gemma 4 26B", description: "A free, rate-limited option when a privacy-compatible provider route is available.", responseFormat: "json_object" },
     ],
     units: [],
