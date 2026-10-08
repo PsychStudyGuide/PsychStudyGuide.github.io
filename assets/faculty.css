@@ -179,6 +179,7 @@
 }
 
 .builder-field > span,
+.builder-field > label,
 .builder-fieldset legend {
   display: block;
   margin-bottom: 7px;

@@ -90,7 +90,7 @@
 
         <main class="study-main" id="study-main">
           <div class="mobile-scope-row">
-            <button class="mobile-scope-button" id="mobile-scope-button" type="button">
+            <button class="mobile-scope-button" id="mobile-scope-button" type="button" aria-controls="sidebar" aria-expanded="false">
               <span>Studying</span>
               <strong id="mobile-scope-label">Choose material</strong>
               <span aria-hidden="true">⌄</span>
@@ -167,7 +167,7 @@
     </div>
 
     <dialog class="modal course-access-modal" id="course-access-modal">
-      <form method="dialog" class="modal-card course-access-card" id="course-access-form">
+      <div class="modal-card course-access-card" id="course-access-form">
         <div class="onboarding-visual compact-visual" aria-hidden="true">
           <div class="visual-glow"></div>
           <span class="access-lock">⌁</span>
@@ -184,7 +184,7 @@
 
           <label class="field-label" for="course-code-input">Course access code</label>
           <div class="key-field">
-            <input id="course-code-input" type="password" autocomplete="off" autocapitalize="characters" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" />
+            <input id="course-code-input" type="password" autocomplete="new-password" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" />
             <button id="reveal-course-code-button" type="button">Show</button>
           </div>
           <p class="field-help" id="course-unlock-status">Hyphens and capitalization do not matter.</p>
@@ -195,11 +195,11 @@
             </button>
           </div>
         </div>
-      </form>
+      </div>
     </dialog>
 
     <dialog class="modal onboarding-modal" id="onboarding-modal">
-      <form method="dialog" class="modal-card onboarding-card" id="onboarding-form">
+      <div class="modal-card onboarding-card" id="onboarding-form">
         <div class="onboarding-visual" aria-hidden="true">
           <div class="visual-glow"></div>
           <span class="visual-book">✦</span>
@@ -235,7 +235,7 @@
             </button>
           </div>
         </div>
-      </form>
+      </div>
     </dialog>
 
     <dialog class="modal" id="setup-modal">
@@ -245,11 +245,11 @@
             <p class="eyebrow">Private setup</p>
             <h2>Connect your study companion</h2>
           </div>
-          <button class="modal-close" value="cancel" aria-label="Close setup">×</button>
+          <button class="modal-close" type="submit" value="cancel" aria-label="Close setup">×</button>
         </div>
 
-        <div class="form-section">
-          <label class="field-label">What kind of device is this?</label>
+        <fieldset class="form-section choice-fieldset">
+          <legend class="field-label">What kind of device is this?</legend>
           <div class="choice-grid">
             <label class="choice-card">
               <input type="radio" name="device-mode" value="personal" checked />
@@ -262,12 +262,12 @@
               <span><strong>Shared or library computer</strong><small>Clear everything when this tab closes</small></span>
             </label>
           </div>
-        </div>
+        </fieldset>
 
         <div class="form-section">
           <label class="field-label" for="api-key-input">OpenRouter API key</label>
           <div class="key-field">
-            <input id="api-key-input" type="password" autocomplete="off" placeholder="sk-or-v1-…" />
+            <input id="api-key-input" type="password" autocomplete="new-password" placeholder="sk-or-v1-…" />
             <button id="reveal-key-button" type="button">Show</button>
           </div>
           <p class="field-help">Stored only in this browser. Requests go directly from your device to OpenRouter.</p>
@@ -293,7 +293,7 @@
             <p class="eyebrow">Preferences</p>
             <h2>Settings</h2>
           </div>
-          <button class="modal-close" value="cancel" aria-label="Close settings">×</button>
+          <button class="modal-close" type="submit" value="cancel" aria-label="Close settings">×</button>
         </div>
 
         <div class="settings-list">
@@ -322,7 +322,7 @@
         <div class="danger-zone">
           <button class="secondary-button" id="reopen-setup-button" type="button">Change API setup</button>
           <button class="secondary-button" id="forget-course-button" type="button">Forget course access</button>
-          <button class="danger-button" id="clear-data-button" type="button">Clear my data</button>
+          <button class="danger-button" id="clear-data-button" type="button">I’m done — clear my data</button>
         </div>
       </form>
     </dialog>
@@ -334,7 +334,7 @@
             <p class="eyebrow">Custom study scope</p>
             <h2>Choose chapters</h2>
           </div>
-          <button class="modal-close" value="cancel" aria-label="Close chapter selection">×</button>
+          <button class="modal-close" type="submit" value="cancel" aria-label="Close chapter selection">×</button>
         </div>
         <div class="check-list" id="custom-scope-list"></div>
         <div class="modal-actions">

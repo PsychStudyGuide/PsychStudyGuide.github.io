@@ -1,0 +1,14 @@
+{
+  "name": "course-study-companion",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:course": "node scripts/build-course-bundle.mjs",
+    "lint:html": "html-validate index.html faculty.html",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "html-validate": "^11.16.2",
+    "jsdom": "^30.1.2"
+  }
+}

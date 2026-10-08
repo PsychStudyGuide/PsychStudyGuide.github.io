@@ -1,21 +1,20 @@
 import { decryptCourseBundle, validateEncryptedBundle } from "./course-crypto.js";
+import {
+  buildChunks,
+  buildRetrievalQuery,
+  inferSupportingSourceIds,
+  retrieveEvidence,
+} from "./grounding.js";
 
 const COURSE_BUNDLE_URL = "course/course.bundle.json";
 const OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
 const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
 const SHARED_IDLE_MS = 20 * 60 * 1000;
 const MAX_HISTORY_TURNS = 8;
-const MAX_CONTEXT_CHUNKS = 7;
 const LOW_REASONING_MODELS = new Set(["openai/gpt-oss-20b"]);
 const COURSE_DB_NAME = "course-study-companion";
 const COURSE_DB_STORE = "course-cache";
 const COURSE_DB_KEY = "active-course";
-
-const STOP_WORDS = new Set(
-  "a an and are as at be because been but by can could did do does for from had has have how i if in into is it its may might more most not of on or our should so than that the their them then there these they this those to too up was we were what when where which who why will with would you your".split(
-    " ",
-  ),
-);
 
 const state = {
   bundle: null,
@@ -152,7 +151,10 @@ function bindEvents() {
   el.applyCustomScopeButton.addEventListener("click", applyCustomScope);
 
   el.mobileScopeButton.addEventListener("click", openSidebar);
-  el.sidebarClose.addEventListener("click", closeSidebar);
+  el.sidebarClose.addEventListener("click", () => closeSidebar(true));
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && el.sidebar.classList.contains("open")) closeSidebar(true);
+  });
 
   el.modeTabs.forEach((tab) => {
     tab.addEventListener("click", () => setMode(tab.dataset.mode));
@@ -266,7 +268,7 @@ async function activateCoursePack(pack) {
   validateCoursePack(pack);
   state.pack = pack;
   applyCoursePack();
-  state.chunks = buildChunks(pack.documents);
+  state.chunks = buildChunks(pack.documents, pack.units);
   await populateApprovedModels();
 }
 
@@ -620,7 +622,7 @@ function renderModeWelcome(mode) {
       <h1>Practice without <span>the guesswork.</span></h1>
       <p class="welcome-copy">Ask for recall, explanation, or connection questions. The quiz will draw only from <strong>${escapeHtml(resolveScope().title)}</strong> and will give feedback one question at a time.</p>
       <div class="starter-grid">
-        <button class="starter-card" type="button" data-mode-prompt="Give me a balanced five-question practice quiz with a mix of recall and explanation questions."><span class="starter-icon violet">1</span><span><strong>Balanced practice</strong><small>Five questions across the selected material</small></span><span class="starter-arrow">→</span></button>
+        <button class="starter-card" type="button" data-mode-prompt="Begin a balanced five-question practice quiz with a mix of recall and explanation. Ask question 1 only, then wait for my answer."><span class="starter-icon violet">1</span><span><strong>Balanced practice</strong><small>Five questions, delivered one at a time</small></span><span class="starter-arrow">→</span></button>
         <button class="starter-card" type="button" data-mode-prompt="Quiz me one question at a time on concepts that students commonly confuse."><span class="starter-icon teal">2</span><span><strong>Tricky distinctions</strong><small>Focus on similar ideas and common mix-ups</small></span><span class="starter-arrow">→</span></button>
         <button class="starter-card" type="button" data-mode-prompt="Give me an application question that connects ideas across the selected chapters."><span class="starter-icon coral">3</span><span><strong>Connect and apply</strong><small>Practice deeper synthesis</small></span><span class="starter-arrow">→</span></button>
       </div>`;
@@ -673,7 +675,8 @@ async function sendCurrentMessage() {
 
   try {
     const scope = resolveScope();
-    const evidence = retrieveEvidence(message, scope.documentIds);
+    const retrievalQuery = buildRetrievalQuery(message, state.history.slice(0, -1));
+    const evidence = retrieveEvidence(retrievalQuery, scope.documentIds, state.chunks);
     const response = await callOpenRouter({ apiKey, modelId, message, evidence, scope });
     typing.remove();
     const validated = validateAssistantResponse(response, evidence);
@@ -713,6 +716,7 @@ async function callOpenRouter({ apiKey, modelId, message, evidence, scope }) {
   const system = `${state.pack.guardrails}\n\n${state.pack.persona}\n\nCURRENT MODE\n${modeRules[state.mode]}\n\nCURRENT STUDY SCOPE\n${scope.title}\n\nCOURSE SOURCES\n${sourceText}\n\nALLOWED SOURCE IDS\n${allowedSourceIds}\n\nRESPONSE CONTRACT\nReturn one JSON object with these exact fields:\n- scope: "in_course", "partial", or "not_found"\n- answer: the student-facing response\n- source_ids: an array containing only IDs copied exactly from ALLOWED SOURCE IDS\nRules: Every factual course claim must be supported by those sources. Copy each source ID exactly, without adding the word SOURCE, brackets, titles, or other text. If sources do not support the answer, set scope to "not_found", explain that the selected course material does not cover it, and use an empty source_ids array. Do not answer from general world knowledge. Never invent a source ID.`;
 
   const recentHistory = state.history.slice(0, -1).slice(-MAX_HISTORY_TURNS * 2);
+  const allowedSourceIdList = evidence.map((chunk) => chunk.id);
   const requestBody = {
     model: modelId,
     messages: [
@@ -722,7 +726,30 @@ async function callOpenRouter({ apiKey, modelId, message, evidence, scope }) {
     ],
     temperature: 0.25,
     max_tokens: state.pack.modelPolicy.maxOutputTokens,
-    response_format: { type: "json_object" },
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "grounded_study_response",
+        strict: true,
+        schema: {
+          type: "object",
+          properties: {
+            scope: { type: "string", enum: ["in_course", "partial", "not_found"] },
+            answer: { type: "string" },
+            source_ids: {
+              type: "array",
+              items: allowedSourceIdList.length
+                ? { type: "string", enum: allowedSourceIdList }
+                : { type: "string" },
+              maxItems: allowedSourceIdList.length ? Math.min(6, allowedSourceIdList.length) : 0,
+              uniqueItems: true,
+            },
+          },
+          required: ["scope", "answer", "source_ids"],
+          additionalProperties: false,
+        },
+      },
+    },
     provider: {
       data_collection: "deny",
       zdr: true,
@@ -818,132 +845,6 @@ function normalizeSourceId(value, allowedIds) {
   return [...allowedIds].find((id) => candidate.includes(id)) || "";
 }
 
-function inferSupportingSourceIds(answer, evidence) {
-  const answerTerms = new Set(tokenize(answer));
-  if (!answerTerms.size) return [];
-
-  const ranked = evidence
-    .map((chunk) => {
-      let overlap = 0;
-      answerTerms.forEach((term) => {
-        if (chunk.termSet.has(term)) overlap += 1;
-      });
-      return { id: chunk.id, overlap, coverage: overlap / answerTerms.size };
-    })
-    .filter((item) => item.overlap >= 4 && item.coverage >= 0.08)
-    .sort((left, right) => right.overlap - left.overlap || right.coverage - left.coverage);
-
-  if (!ranked.length) return [];
-  const relativeThreshold = Math.max(4, Math.ceil(ranked[0].overlap * 0.6));
-  return ranked
-    .filter((item) => item.overlap >= relativeThreshold)
-    .slice(0, 2)
-    .map((item) => item.id);
-}
-
-function retrieveEvidence(query, allowedDocumentIds) {
-  const allowed = state.chunks.filter((chunk) => allowedDocumentIds.includes(chunk.documentId));
-  if (!allowed.length) return [];
-  const queryTerms = tokenize(query);
-  if (!queryTerms.length) return balancedFallback(allowed);
-
-  const documentFrequency = new Map();
-  queryTerms.forEach((term) => {
-    documentFrequency.set(term, allowed.filter((chunk) => chunk.termSet.has(term)).length);
-  });
-
-  const scored = allowed.map((chunk) => {
-    let score = 0;
-    queryTerms.forEach((term) => {
-      const tf = chunk.terms.filter((candidate) => candidate === term).length;
-      if (!tf) return;
-      const idf = Math.log((allowed.length + 1) / ((documentFrequency.get(term) || 0) + 1)) + 1;
-      score += (1 + Math.log(tf)) * idf;
-      if (chunk.headingTerms.has(term)) score += 1.25;
-    });
-    return { ...chunk, score };
-  });
-
-  const positive = scored.filter((chunk) => chunk.score > 0).sort((a, b) => b.score - a.score);
-  return (positive.length ? diversifyChunks(positive) : balancedFallback(allowed)).slice(0, MAX_CONTEXT_CHUNKS);
-}
-
-function diversifyChunks(chunks) {
-  const selected = [];
-  const perDocument = new Map();
-  for (const chunk of chunks) {
-    const count = perDocument.get(chunk.documentId) || 0;
-    if (count >= 3) continue;
-    selected.push(chunk);
-    perDocument.set(chunk.documentId, count + 1);
-    if (selected.length >= MAX_CONTEXT_CHUNKS) break;
-  }
-  return selected;
-}
-
-function balancedFallback(chunks) {
-  const selected = [];
-  const seen = new Set();
-  for (const chunk of chunks) {
-    if (!seen.has(chunk.documentId)) {
-      selected.push(chunk);
-      seen.add(chunk.documentId);
-    }
-    if (selected.length >= MAX_CONTEXT_CHUNKS) break;
-  }
-  for (const chunk of chunks) {
-    if (!selected.includes(chunk)) selected.push(chunk);
-    if (selected.length >= MAX_CONTEXT_CHUNKS) break;
-  }
-  return selected;
-}
-
-function buildChunks(documents) {
-  const units = new Map(state.pack.units.map((unit) => [unit.id, unit]));
-  const chunks = [];
-  documents.forEach((document) => {
-    const paragraphs = String(document.content || "")
-      .split(/\n\s*\n/)
-      .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
-      .filter(Boolean);
-    let buffer = "";
-    let index = 1;
-    const flush = () => {
-      if (!buffer.trim()) return;
-      const text = buffer.trim();
-      const terms = tokenize(text);
-      chunks.push({
-        id: `${document.id}-s${index++}`,
-        documentId: document.id,
-        documentTitle: document.title,
-        unitId: document.unitId,
-        unitTitle: units.get(document.unitId)?.title || document.unitId,
-        text,
-        terms,
-        termSet: new Set(terms),
-        headingTerms: new Set(tokenize(`${document.title} ${units.get(document.unitId)?.title || ""}`)),
-      });
-      buffer = "";
-    };
-    paragraphs.forEach((paragraph) => {
-      if (buffer.length && buffer.length + paragraph.length > 1500) flush();
-      buffer += `${buffer ? "\n\n" : ""}${paragraph}`;
-    });
-    flush();
-  });
-  return chunks;
-}
-
-function tokenize(text) {
-  return String(text)
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[^a-z0-9'\s-]/g, " ")
-    .split(/\s+/)
-    .map((word) => word.replace(/^'+|'+$/g, ""))
-    .filter((word) => word.length > 2 && !STOP_WORDS.has(word));
-}
-
 function addMessage(role, text, meta = null) {
   const row = document.createElement("article");
   row.className = `message-row ${role}`;
@@ -990,8 +891,8 @@ function addAssistantMessage(response, evidence) {
     if (!chunk) return;
     const chip = document.createElement("span");
     chip.className = "evidence-chip";
-    chip.textContent = `Source · ${chunk.documentTitle}`;
-    chip.title = chunk.unitTitle;
+    chip.textContent = `Source · ${chunk.sectionTitle || chunk.documentTitle}`;
+    chip.title = `${chunk.unitTitle} · ${chunk.documentTitle}`;
     meta.append(chip);
   });
 }
@@ -1101,10 +1002,14 @@ function toggleTheme() {
 
 function openSidebar() {
   el.sidebar.classList.add("open");
+  el.mobileScopeButton.setAttribute("aria-expanded", "true");
+  el.sidebarClose.focus();
 }
 
-function closeSidebar() {
+function closeSidebar(returnFocus = false) {
   el.sidebar.classList.remove("open");
+  el.mobileScopeButton.setAttribute("aria-expanded", "false");
+  if (returnFocus) el.mobileScopeButton.focus();
 }
 
 function setRequestState(active) {

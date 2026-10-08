@@ -17,6 +17,7 @@ The `.gitignore` file blocks the usual readable course-pack and source locations
 ## Current pilot
 
 - Course: General Psychology
+- Demo content: Chapter 1.1 subfields and major themes, plus Chapter 1.2 history of psychology
 - Hosting target: GitHub Pages
 - Runtime: static HTML, CSS, and JavaScript
 - Student AI access: personal OpenRouter API key, stored only in the student's browser
@@ -43,3 +44,28 @@ python -m http.server 8080
 ```
 
 Then open `http://localhost:8080`.
+
+## Verification
+
+Install the development dependencies once, then run the automated checks:
+
+```bash
+npm install
+npm run lint:html
+npm test
+```
+
+The test suite covers encryption round trips, course retrieval, citation recovery, off-topic rejection, short follow-up questions, approved model selection, privacy routing flags, the complete student setup flow, and one-question-at-a-time quiz behavior.
+
+## Command-line bundle build
+
+The browser-based faculty editor remains the ordinary workflow. A repeatable command is also available for a private pack and a separately stored code file:
+
+```bash
+npm run build:course -- \
+  --pack /private/path/general-psychology.coursepack.json \
+  --code-file /private/path/course-code.txt \
+  --out course/course.bundle.json
+```
+
+Never place either private input file in this repository.

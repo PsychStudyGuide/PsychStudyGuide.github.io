@@ -1202,6 +1202,12 @@ a:focus-visible {
   margin: 21px 0;
 }
 
+.choice-fieldset {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
 .choice-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1463,12 +1469,17 @@ a:focus-visible {
     padding: 24px 20px;
     border-right: 1px solid var(--line);
     box-shadow: 20px 0 60px rgba(12, 10, 30, 0.28);
+    visibility: hidden;
+    pointer-events: none;
     transform: translateX(-110%);
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, visibility 0s linear 0.2s;
   }
 
   .sidebar.open {
+    visibility: visible;
+    pointer-events: auto;
     transform: translateX(0);
+    transition-delay: 0s;
   }
 
   .sidebar-close {

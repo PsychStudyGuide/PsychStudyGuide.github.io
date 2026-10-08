@@ -115,13 +115,13 @@
         </div>
         <p class="builder-help">The access code is never placed in the downloaded bundle. Give it directly to your students. Keep your private editing backup somewhere safe—it contains the readable course material.</p>
         <div class="builder-grid code-builder-grid">
-          <label class="builder-field">
-            <span>Course access code</span>
+          <div class="builder-field">
+            <label for="builder-course-code">Course access code</label>
             <div class="key-field">
-              <input id="builder-course-code" type="password" autocomplete="off" placeholder="Generate a secure code" />
+              <input id="builder-course-code" type="password" autocomplete="new-password" placeholder="Generate a secure code" />
               <button id="reveal-builder-code-button" type="button">Show</button>
             </div>
-          </label>
+          </div>
           <button class="secondary-button generate-code-button" id="generate-course-code-button" type="button">Generate secure code</button>
         </div>
         <div class="code-result" id="course-code-result" hidden>
@@ -140,7 +140,7 @@
 
     <dialog class="modal" id="unit-dialog">
       <form method="dialog" class="modal-card settings-card" id="unit-form">
-        <div class="modal-header"><div><p class="eyebrow">Course structure</p><h2>Add a chapter or unit</h2></div><button class="modal-close" value="cancel" aria-label="Close">×</button></div>
+        <div class="modal-header"><div><p class="eyebrow">Course structure</p><h2>Add a chapter or unit</h2></div><button class="modal-close" type="submit" value="cancel" aria-label="Close">×</button></div>
         <label class="builder-field"><span>Title</span><input id="new-unit-title" type="text" placeholder="Chapter 2 · Research Methods" /></label>
         <label class="builder-field"><span>Description</span><textarea id="new-unit-description" rows="3" placeholder="What this chapter covers"></textarea></label>
         <div class="modal-actions"><button class="primary-button" id="save-unit-button" type="button">Add chapter</button></div>
@@ -149,7 +149,7 @@
 
     <dialog class="modal" id="study-set-dialog">
       <form method="dialog" class="modal-card settings-card">
-        <div class="modal-header"><div><p class="eyebrow">Exam scope</p><h2>Create a study set</h2></div><button class="modal-close" value="cancel" aria-label="Close">×</button></div>
+        <div class="modal-header"><div><p class="eyebrow">Exam scope</p><h2>Create a study set</h2></div><button class="modal-close" type="submit" value="cancel" aria-label="Close">×</button></div>
         <label class="builder-field"><span>Name</span><input id="new-set-title" type="text" placeholder="Exam 2 Study Set" /></label>
         <label class="builder-field"><span>Description</span><textarea id="new-set-description" rows="3" placeholder="Chapters and themes included on this exam"></textarea></label>
         <fieldset class="builder-fieldset"><legend>Included chapters</legend><div class="check-list" id="new-set-unit-list"></div></fieldset>

@@ -1,9 +1,10 @@
-const CACHE_NAME = "course-study-companion-v2";
+const CACHE_NAME = "course-study-companion-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./assets/styles.css",
   "./assets/app.js",
+  "./assets/grounding.js",
   "./assets/course-crypto.js",
   "./course/course.bundle.json",
   "./manifest.webmanifest",
