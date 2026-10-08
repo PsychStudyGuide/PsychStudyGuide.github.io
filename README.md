@@ -2,7 +2,7 @@
 
 A mobile-first, course-grounded AI study companion for college students.
 
-The application uses professor-provided materials as its evidence base, supports lecture/chapter/exam study scopes, and limits students to an instructor-approved low-cost OpenRouter model lineup.
+The application uses professor-provided materials as its evidence base, supports lecture/chapter/exam study scopes, and limits students to an instructor-approved free/low-cost OpenRouter model lineup.
 
 ## Privacy architecture
 

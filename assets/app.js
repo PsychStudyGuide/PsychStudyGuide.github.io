@@ -455,7 +455,8 @@ async function populateApprovedModels() {
   approved.forEach((model) => {
     const option = document.createElement("option");
     option.value = model.id;
-    option.textContent = `${model.label} · ${model.displayName}`;
+    const costLabel = model.costLabel ? ` (${model.costLabel})` : "";
+    option.textContent = `${model.label} · ${model.displayName}${costLabel}`;
     option.dataset.description = model.description;
     el.modelSelect.append(option);
   });
@@ -702,6 +703,7 @@ async function sendCurrentMessage() {
 }
 
 async function callOpenRouter({ apiKey, modelId, message, evidence, scope }) {
+  const configuredModel = state.pack.models.find((model) => model.id === modelId);
   const sourceText = evidence.length
     ? evidence.map((chunk) => `[SOURCE ${chunk.id} | ${chunk.unitTitle} · ${chunk.documentTitle}]\n${chunk.text}`).join("\n\n")
     : "[NO RELEVANT COURSE SOURCE WAS FOUND]";
@@ -717,6 +719,33 @@ async function callOpenRouter({ apiKey, modelId, message, evidence, scope }) {
 
   const recentHistory = state.history.slice(0, -1).slice(-MAX_HISTORY_TURNS * 2);
   const allowedSourceIdList = evidence.map((chunk) => chunk.id);
+  const responseFormat =
+    configuredModel?.responseFormat === "json_object"
+      ? { type: "json_object" }
+      : {
+          type: "json_schema",
+          json_schema: {
+            name: "grounded_study_response",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                scope: { type: "string", enum: ["in_course", "partial", "not_found"] },
+                answer: { type: "string" },
+                source_ids: {
+                  type: "array",
+                  items: allowedSourceIdList.length
+                    ? { type: "string", enum: allowedSourceIdList }
+                    : { type: "string" },
+                  maxItems: allowedSourceIdList.length ? Math.min(6, allowedSourceIdList.length) : 0,
+                  uniqueItems: true,
+                },
+              },
+              required: ["scope", "answer", "source_ids"],
+              additionalProperties: false,
+            },
+          },
+        };
   const requestBody = {
     model: modelId,
     messages: [
@@ -726,30 +755,7 @@ async function callOpenRouter({ apiKey, modelId, message, evidence, scope }) {
     ],
     temperature: 0.25,
     max_tokens: state.pack.modelPolicy.maxOutputTokens,
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "grounded_study_response",
-        strict: true,
-        schema: {
-          type: "object",
-          properties: {
-            scope: { type: "string", enum: ["in_course", "partial", "not_found"] },
-            answer: { type: "string" },
-            source_ids: {
-              type: "array",
-              items: allowedSourceIdList.length
-                ? { type: "string", enum: allowedSourceIdList }
-                : { type: "string" },
-              maxItems: allowedSourceIdList.length ? Math.min(6, allowedSourceIdList.length) : 0,
-              uniqueItems: true,
-            },
-          },
-          required: ["scope", "answer", "source_ids"],
-          additionalProperties: false,
-        },
-      },
-    },
+    response_format: responseFormat,
     provider: {
       data_collection: "deny",
       zdr: true,

@@ -28,6 +28,7 @@ test("student flow unlocks, configures privacy, and renders grounded answers", {
           { id: "google/gemini-2.5-flash-lite", pricing: { prompt: "0.0000001", completion: "0.0000004" } },
           { id: "openai/gpt-oss-20b", pricing: { prompt: "0.000000018", completion: "0.00000009" } },
           { id: "qwen/qwen3.5-flash-02-23", pricing: { prompt: "0.000000065", completion: "0.00000026" } },
+          { id: "google/gemma-4-26b-a4b-it:free", pricing: { prompt: "0", completion: "0" } },
         ],
       });
     }
@@ -91,7 +92,21 @@ test("student flow unlocks, configures privacy, and renders grounded answers", {
     const modelSelect = window.document.getElementById("model-select");
     assert.deepEqual(
       [...modelSelect.options].map((option) => option.value),
-      ["google/gemini-2.5-flash-lite", "openai/gpt-oss-20b", "qwen/qwen3.5-flash-02-23"],
+      [
+        "google/gemini-2.5-flash-lite",
+        "openai/gpt-oss-20b",
+        "qwen/qwen3.5-flash-02-23",
+        "google/gemma-4-26b-a4b-it:free",
+      ],
+    );
+    assert.deepEqual(
+      [...modelSelect.options].map((option) => option.textContent),
+      [
+        "Fast and focused · Gemini 2.5 Flash Lite (medium cost)",
+        "Careful reasoning · GPT OSS 20B (lowest paid cost)",
+        "Balanced · Qwen 3.5 Flash (low cost)",
+        "Free when available · Gemma 4 26B",
+      ],
     );
     window.document.getElementById("api-key-input").value = "sk-or-v1-integration-test";
     window.document.getElementById("save-setup-button").click();
@@ -130,6 +145,7 @@ test("student flow unlocks, configures privacy, and renders grounded answers", {
     assert.match(window.document.querySelector(".scope-badge").textContent, /Directly supported/);
 
     window.document.getElementById("new-topic-button").click();
+    window.localStorage.setItem("study-model-id", "google/gemma-4-26b-a4b-it:free");
     window.document.querySelector('[data-mode="quiz"]').click();
     const balancedQuizButton = window.document.querySelector('.mode-intro [data-mode-prompt^="Begin a balanced"]');
     assert.ok(balancedQuizButton);
@@ -141,12 +157,18 @@ test("student flow unlocks, configures privacy, and renders grounded answers", {
     );
 
     const quizRequest = chatRequests[1].body;
+    assert.equal(quizRequest.model, "google/gemma-4-26b-a4b-it:free");
+    assert.equal(quizRequest.provider.data_collection, "deny");
+    assert.equal(quizRequest.provider.zdr, true);
+    assert.equal(quizRequest.provider.require_parameters, true);
+    assert.deepEqual(quizRequest.response_format, { type: "json_object" });
     assert.match(quizRequest.messages[0].content, /Ask exactly ONE question at a time/);
     assert.match(quizRequest.messages.at(-1).content, /Ask question 1 only/);
     const quizAnswer = window.document.querySelector(".message-row.assistant .message-bubble").textContent;
     assert.equal((quizAnswer.match(/\?/g) || []).length, 1);
 
     window.document.getElementById("new-topic-button").click();
+    window.localStorage.setItem("study-model-id", "google/gemini-2.5-flash-lite");
     window.document.querySelector('[data-mode="ask"]').click();
     composer.value = "What are the attachment styles?";
     window.document.getElementById("send-button").click();
@@ -192,9 +214,10 @@ async function loadCourseFixture() {
     },
     modelPolicy: { maxPromptPerMillion: 0.15, maxCompletionPerMillion: 0.6, maxOutputTokens: 850 },
     models: [
-      { id: "google/gemini-2.5-flash-lite", label: "Fast", displayName: "Gemini 2.5 Flash Lite", description: "Fast" },
-      { id: "openai/gpt-oss-20b", label: "Careful", displayName: "GPT OSS 20B", description: "Careful" },
-      { id: "qwen/qwen3.5-flash-02-23", label: "Balanced", displayName: "Qwen 3.5 Flash", description: "Balanced" },
+      { id: "google/gemini-2.5-flash-lite", label: "Fast and focused", displayName: "Gemini 2.5 Flash Lite", costLabel: "medium cost", description: "Fast" },
+      { id: "openai/gpt-oss-20b", label: "Careful reasoning", displayName: "GPT OSS 20B", costLabel: "lowest paid cost", description: "Careful" },
+      { id: "qwen/qwen3.5-flash-02-23", label: "Balanced", displayName: "Qwen 3.5 Flash", costLabel: "low cost", description: "Balanced" },
+      { id: "google/gemma-4-26b-a4b-it:free", label: "Free when available", displayName: "Gemma 4 26B", description: "Free", responseFormat: "json_object" },
     ],
     units: [
       { id: "subfields", title: "1.1 Psychological Subfields and Major Themes", order: 1 },

@@ -53,7 +53,7 @@ Show **Explain it back** and say:
 ## Points to emphasize
 
 - The public GitHub repository contains an encrypted course bundle, not readable lecture transcripts.
-- Students provide their own OpenRouter key. The interface permits only the instructor-approved low-cost lineup and checks the live model catalog.
+- Students provide their own OpenRouter key. The interface offers Gemma free when a privacy-compatible route is available, plus instructor-approved low-cost fallbacks, and checks the live model catalog.
 - Requests require a provider that denies data collection and supports zero data retention.
 - The site asks students not to enter names, IDs, grades, diagnoses, or other identifying information.
 - This is an optional study aid. College educational resource funds may not be used for OpenRouter credits or related costs.
